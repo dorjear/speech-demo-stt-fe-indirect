@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { Container } from 'reactstrap';
 import { getTokenOrRefresh } from './token_util';
 import './custom.css'
@@ -11,8 +11,20 @@ export default function App() {
     const [displayText, setDisplayText] = useState('INITIALIZED: ready to test speech...');
     const [player, updatePlayer] = useState({p: undefined, muted: false});
     const [recording, setRecording] = useState(false);
+    const [uploadOrTranslate, setUploadOrTranslate] = useState('upload');
+    const uploadOrTranslateRef = useRef(uploadOrTranslate);
+
+    useEffect(() => {
+        uploadOrTranslateRef.current = uploadOrTranslate;
+    }, [uploadOrTranslate]);
 
     const startRecording = () => {
+        setUploadOrTranslate('upload')
+        setRecording(true);
+    };
+
+    const startTranslateRecording = () => {
+        setUploadOrTranslate('translate')
         setRecording(true);
     };
 
@@ -25,14 +37,14 @@ export default function App() {
         if (recordedBlob && recordedBlob.blob) {
             const formData = new FormData();
             formData.append('file', recordedBlob.blob, 'recording.wav');
-
+            const action = uploadOrTranslateRef.current;
             try {
-                const response = await axios.post('http://localhost:5001/api/Voice/upload', formData, {
+                const response = await axios.post('http://localhost:5001/api/Voice/' + action, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                var text = response.data.DisplayText || response.data.displayText || 'No transcription available'
+                var text = response.data.DisplayText || response.data.displayText || response.data.text || 'No transcription available'
                 console.log("text is " + text)
                 setDisplayText(text);
                 console.log('Transcription: ', response.data);
@@ -58,7 +70,7 @@ export default function App() {
                 }
             });
 
-            setDisplayText(response.data.DisplayText || response.data.displayText || 'No transcription available');
+            setDisplayText(response.data.DisplayText || response.data.displayText || response.data.text ||'No transcription available');
         } catch (error) {
             console.error('Error uploading the file:', error);
         }
@@ -127,6 +139,14 @@ export default function App() {
                     <div className="mt-2">
                         <i className="fas fa-microphone fa-lg mr-2" onClick={() => startRecording()}/>
                         Start recording.
+
+                        <i className="fas fa-microphone-slash fa-lg mr-2" onClick={() => stopRecording()}/>
+                        Stop recording
+                    </div>
+
+                    <div className="mt-2">
+                        <i className="fas fa-microphone fa-lg mr-2" onClick={() => startTranslateRecording()}/>
+                        Start recording for translation.
 
                         <i className="fas fa-microphone-slash fa-lg mr-2" onClick={() => stopRecording()}/>
                         Stop recording
