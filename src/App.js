@@ -11,20 +11,20 @@ export default function App() {
     const [displayText, setDisplayText] = useState('INITIALIZED: ready to test speech...');
     const [player, updatePlayer] = useState({p: undefined, muted: false});
     const [recording, setRecording] = useState(false);
-    const [uploadOrTranslate, setUploadOrTranslate] = useState('upload');
-    const uploadOrTranslateRef = useRef(uploadOrTranslate);
+    const [uploadOrChat, setUploadOrChat] = useState('upload');
+    const uploadOrChatRef = useRef(uploadOrChat);
 
     useEffect(() => {
-        uploadOrTranslateRef.current = uploadOrTranslate;
-    }, [uploadOrTranslate]);
+        uploadOrChatRef.current = uploadOrChat;
+    }, [uploadOrChat]);
 
     const startRecording = () => {
-        setUploadOrTranslate('upload')
+        setUploadOrChat('upload')
         setRecording(true);
     };
 
-    const startTranslateRecording = () => {
-        setUploadOrTranslate('translate')
+    const startChatRecording = () => {
+        setUploadOrChat('chatWithVoice')
         setRecording(true);
     };
 
@@ -37,7 +37,7 @@ export default function App() {
         if (recordedBlob && recordedBlob.blob) {
             const formData = new FormData();
             formData.append('file', recordedBlob.blob, 'recording.wav');
-            const action = uploadOrTranslateRef.current;
+            const action = uploadOrChatRef.current;
             try {
                 const response = await axios.post('http://localhost:5001/api/Voice/' + action, formData, {
                     headers: {
@@ -145,8 +145,8 @@ export default function App() {
                     </div>
 
                     <div className="mt-2">
-                        <i className="fas fa-microphone fa-lg mr-2" onClick={() => startTranslateRecording()}/>
-                        Start recording for translation.
+                        <i className="fas fa-microphone fa-lg mr-2" onClick={() => startChatRecording()}/>
+                        Start recording for chat.
 
                         <i className="fas fa-microphone-slash fa-lg mr-2" onClick={() => stopRecording()}/>
                         Stop recording
